@@ -137,7 +137,6 @@ int main() {
 			{}
 		}
 		commands.clear();
-		cout << "$ ";
 	}
 
 }
