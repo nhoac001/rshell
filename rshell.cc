@@ -11,20 +11,21 @@
 using namespace std;
 
 void execute(vector<char*> ok, int pass) {
-	pid_t pid;
+	pid_t c_pid, pid;
 	int status;
 
-	pid = fork();
+	c_pid = fork();
 
-	if(pid < 0) {
-		cout << "ERROR: Fork child failed\n";
+	if(c_pid < 0) {
+		perror("fork failed");
 		exit(1);
 	}
-	else if(pid == 0) {
+	else if(c_pid == 0) {
 		pass = execvp(ok[0], &(ok[0]));
+		perror("execvp failed");
 	}
 	else {
-		if(wait(&status) < 0) {
+		if((pid = wait(&status)) < 0) {
 			perror("Error in child");
 			exit(1);
 		}
@@ -67,6 +68,9 @@ int main() {
 			if(*beg == "#" || strncmp(&beg->at(0), "#", 1) == 0) {
 				break;
 			}
+			else if(*beg == "exit") {
+				return 0;
+			}
 			else if(*beg == "||" || strncmp(&beg->at(0), "||", 2) == 0) {
 				if(argv.size() != 0) {
 					connectors.push_back("||");
@@ -80,6 +84,7 @@ int main() {
 				string temp = beg->substr(0, beg->size()-1);
 				ls.push_back(temp);
 				argv.push_back(const_cast<char*>(ls.back().c_str()));
+				argv.push_back(NULL);
 				commands.push_back(argv);
 				argv.clear();
 			}
@@ -91,11 +96,11 @@ int main() {
 
 		//push argv into commands if argv isn't empty
 		if(argv.size() != 0) {
-			cout << "pushing extra command\n";
+			argv.push_back(NULL);
 			commands.push_back(argv);
 			argv.clear();
 		}
-		for(unsigned i = 0; i < commands.size(); i++) {
+/*		for(unsigned i = 0; i < commands.size(); i++) {
 			for(unsigned j = 0; j < commands.at(i).size(); j++) {
 				cout << commands[i][j];
 			}
@@ -103,7 +108,7 @@ int main() {
 		}
 
 	
-/*		pid_t pid;
+		pid_t pid;
 		int status;
 
 		pid = fork();
@@ -132,6 +137,7 @@ int main() {
 			{}
 		}
 		commands.clear();
+		cout << "$ ";
 	}
 
 }
