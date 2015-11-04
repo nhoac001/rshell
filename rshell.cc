@@ -10,6 +10,27 @@
 
 using namespace std;
 
+void execute(vector<char*> ok, int pass) {
+	pid_t pid;
+	int status;
+
+	pid = fork();
+
+	if(pid < 0) {
+		cout << "ERROR: Fork child failed\n";
+		exit(1);
+	}
+	else if(pid == 0) {
+		pass = execvp(ok[0], &(ok[0]));
+	}
+	else {
+		if(wait(&status) < 0) {
+			perror("Error in child");
+			exit(1);
+		}
+	}
+}
+
 int main() {
 	//vector to temp hold commands
 	vector<string> ls;
@@ -68,13 +89,21 @@ int main() {
 			}
 		}
 
-		//if just one command, commands vector is empty
-		if(commands.size() == 0) {
+		//push argv into commands if argv isn't empty
+		if(argv.size() != 0) {
+			cout << "pushing extra command\n";
 			commands.push_back(argv);
 			argv.clear();
 		}
+		for(unsigned i = 0; i < commands.size(); i++) {
+			for(unsigned j = 0; j < commands.at(i).size(); j++) {
+				cout << commands[i][j];
+			}
+			cout << endl;
+		}
 
-		pid_t pid;
+	
+/*		pid_t pid;
 		int status;
 
 		pid = fork();
@@ -86,7 +115,7 @@ int main() {
 		}
 		else if(pid == 0) {
 			for(unsigned i = 0; i < commands.size(); i++) {	
-				int result = execvp(commands.at(i).at(0), &(commands.at(i).at(0)));
+				int result = execvp(commands[i][0], &(commands[i][0]));
 				cout << result << endl;
 			}	
 		}
@@ -95,8 +124,16 @@ int main() {
 				perror("Error in child");
 				exit(1);
 			}
+		}*/
+		for(unsigned i = 0; i < commands.size(); i++) {
+			int state = 0;
+			execute(commands[i], state);
+			if(state)
+			{}
 		}
 		commands.clear();
 	}
 
 }
+
+
