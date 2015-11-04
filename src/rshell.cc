@@ -62,18 +62,19 @@ int main() {
 		tokenizer tok(input, sep);
 
 		//use tokenized input to fill argv
-		for(tokenizer::iterator beg = tok.begin(); beg != tok.end(); ++beg) {
+		for (tokenizer::iterator beg = tok.begin(); beg != tok.end(); ++beg) {
 
 			//skip comments, only works if begins with '#'
-			if(*beg == "#" || strncmp(&beg->at(0), "#", 1) == 0) {
+			if (*beg == "#" || strncmp(&beg->at(0), "#", 1) == 0) {
 				break;
 			}
 			//or condition
-			else if(*beg == "||" || strncmp(&beg->at(0), "||", 2) == 0) {
+			else if (*beg == "||" || strncmp(&beg->at(0), "||", 2) == 0) {
 				// check if argv has been filled. If not, skip the "||"
-				if(argv.size() != 0) {
+				if (argv.size() != 0) {
 					//push back "OR" for when you run commands
 					connectors.push_back("OR");
+
 					//end with NULL or you'll have problems with processes
 					argv.push_back(NULL);
 					commands.push_back(argv);
@@ -81,18 +82,22 @@ int main() {
 				}	
 			}
 			//and condition - same as OR above, just change "or" with "and"
-			else if(*beg == "&&" || strncmp(&beg->at(0), "&&", 2) == 0) {
-				if(argv.size() != 0) {
+			else if (*beg == "&&" || strncmp(&beg->at(0), "&&", 2) == 0) {
+				//check if argv has been filled. If not, skip the "&&"
+				if (argv.size() != 0) {
+					//push back "AND" for you run commmands
 					connectors.push_back("AND");
+
+					//end with NULL, push into commands
 					argv.push_back(NULL);
 					commands.push_back(argv);
 					argv.clear();
 				}
 			}
 			//; condition
-			else if(*beg == ";" || strncmp(&beg->at(beg->size()-1), ";", 1) == 0) {
+			else if (*beg == ";" || strncmp(&beg->at(beg->size()-1), ";", 1) == 0) {
 				connectors.push_back(";");
-				//cut off the ';' at the end
+				//cut off the ';' at the end, push into commands
 				string temp = beg->substr(0, beg->size()-1);
 				ls.push_back(temp);
 				argv.push_back(const_cast<char*>(ls.back().c_str()));
@@ -100,6 +105,7 @@ int main() {
 				commands.push_back(argv);
 				argv.clear();
 			}
+			//else, keep addinng words till end or connector reached
 			else {
 				//convert to string
 				ls.push_back(*beg);
@@ -109,7 +115,7 @@ int main() {
 		}
 
 		//push argv into commands if argv isn't empty
-		if(argv.size() != 0) {
+		if (argv.size() != 0) {
 			argv.push_back(NULL);
 			commands.push_back(argv);
 			argv.clear();
@@ -118,25 +124,26 @@ int main() {
 		//store the value returned by execvp
 		int state = 0;
 
-		for(unsigned i = 0; i < commands.size(); i++) {
+		for (unsigned i = 0; i < commands.size(); i++) {
 			//exit check
-			if(string(commands[i][0]) == "exit") {
+			if (string(commands[i][0]) == "exit") {
 				return 0;
 			}
 			//connectors only show up after one command has run
-			if(i > 0) {
+			if (i > 0) {
 				// and condition, run command if previous succeeded
-				if((connectors[i-1] == "AND") && (state != -1)) {
+				if ((connectors[i-1] == "AND") && (state != -1)) {
 					execute(commands[i], state);
 				}
 				// or condition, run command if previous failed
-				else if((connectors[i-1] == "OR") && (state == -1)) {
+				else if ((connectors[i-1] == "OR") && (state == -1)) {
 					execute(commands[i], state);
 				}
 				// ; condition, run command regardless
-				else if(connectors[i-1] == ";") {
+				else if (connectors[i-1] == ";") {
 					execute(commands[i], state);
 				}
+				//else, failed all tests, skip the command
 				else 
 				{}
 			}
