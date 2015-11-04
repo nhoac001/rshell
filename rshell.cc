@@ -68,19 +68,31 @@ int main() {
 			if(*beg == "#" || strncmp(&beg->at(0), "#", 1) == 0) {
 				break;
 			}
-			else if(*beg == "exit") {
-				return 0;
-			}
+			//or condition
 			else if(*beg == "||" || strncmp(&beg->at(0), "||", 2) == 0) {
+				// check if argv has been filled. If not, skip the "||"
 				if(argv.size() != 0) {
-					connectors.push_back("||");
+					//push back "OR" for when you run commands
+					connectors.push_back("OR");
+					//end with NULL or you'll have problems with processes
+					argv.push_back(NULL);
+					commands.push_back(argv);
+					argv.clear();
+				}	
+			}
+			//and condition - same as OR above, just change "or" with "and"
+			else if(*beg == "&&" || strncmp(&beg->at(0), "&&", 2) == 0) {
+				if(argv.size() != 0) {
+					connectors.push_back("AND");
+					argv.push_back(NULL);
 					commands.push_back(argv);
 					argv.clear();
 				}
-				
 			}
+			//; condition
 			else if(*beg == ";" || strncmp(&beg->at(beg->size()-1), ";", 1) == 0) {
 				connectors.push_back(";");
+				//cut off the ';' at the end
 				string temp = beg->substr(0, beg->size()-1);
 				ls.push_back(temp);
 				argv.push_back(const_cast<char*>(ls.back().c_str()));
@@ -89,7 +101,9 @@ int main() {
 				argv.clear();
 			}
 			else {
+				//convert to string
 				ls.push_back(*beg);
+				//convert to const char* and push back
 				argv.push_back(const_cast<char*>(ls.back().c_str()));
 			}
 		}
@@ -100,42 +114,36 @@ int main() {
 			commands.push_back(argv);
 			argv.clear();
 		}
-/*		for(unsigned i = 0; i < commands.size(); i++) {
-			for(unsigned j = 0; j < commands.at(i).size(); j++) {
-				cout << commands[i][j];
-			}
-			cout << endl;
-		}
 
-	
-		pid_t pid;
-		int status;
+		//store the value returned by execvp
+		int state = 0;
 
-		pid = fork();
-
-
-		if(pid < 0) {
-			cout << "ERROR: Fork child failed\n";
-			exit(1);
-		}
-		else if(pid == 0) {
-			for(unsigned i = 0; i < commands.size(); i++) {	
-				int result = execvp(commands[i][0], &(commands[i][0]));
-				cout << result << endl;
-			}	
-		}
-		else {
-			if(wait(&status) < 0) {
-				perror("Error in child");
-				exit(1);
-			}
-		}*/
 		for(unsigned i = 0; i < commands.size(); i++) {
-			int state = 0;
-			execute(commands[i], state);
-			if(state)
-			{}
+			//exit check
+			if(string(commands[i][0]) == "exit") {
+				return 0;
+			}
+			//connectors only show up after one command has run
+			if(i > 0) {
+				// and condition, run command if previous succeeded
+				if((connectors[i-1] == "AND") && (state != -1)) {
+					execute(commands[i], state);
+				}
+				// or condition, run command if previous failed
+				else if((connectors[i-1] == "OR") && (state == -1)) {
+					execute(commands[i], state);
+				}
+				// ; condition, run command regardless
+				else {
+					execute(commands[i], state);
+				}
+			}
+			// i = 0. first command
+			else {
+				execute(commands[i], state);
+			}
 		}
+		//empty commands vector
 		commands.clear();
 	}
 
