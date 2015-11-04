@@ -19,6 +19,8 @@ int main() {
 	vector<char*> argv;
 	//stores what connectors we find
 	vector<string> connectors;
+	//2-d vector to store list of commands
+	vector< vector< char* > > commands;
 
 	typedef boost::tokenizer<boost::escaped_list_separator<char> > tokenizer;
 	string separator1("");
@@ -36,24 +38,42 @@ int main() {
 
 		//tokenize input
 		tokenizer tok(input, sep);
-		
+
 		//use tokenized input to fill argv
 		for(tokenizer::iterator beg = tok.begin(); beg != tok.end(); ++beg) {
+
 			//skip comments, only works if begins with '#'
 			if(*beg == "#" || strncmp(&beg->at(0), "#", 1) == 0) {
 				break;
 			}
+			else if(*beg == "||" || strncmp(&beg->at(0), "||", 2) == 0) {
+				if(argv.size() != 0) {
+					connectors.push_back("||");
+					commands.push_back(argv);
+					argv.clear();
+				}
+				
+			}
 			else if(*beg == ";" || strncmp(&beg->at(beg->size()-1), ";", 1) == 0) {
 				connectors.push_back(";");
-				ls.push_back(*beg);
+				string temp = beg->substr(0, beg->size()-1);
+				ls.push_back(temp);
 				argv.push_back(const_cast<char*>(ls.back().c_str()));
+				commands.push_back(argv);
+				argv.clear();
 			}
 			else {
 				ls.push_back(*beg);
 				argv.push_back(const_cast<char*>(ls.back().c_str()));
 			}
-			
 		}
+
+		//if just one command, commands vector is empty
+		if(commands.size() == 0) {
+			commands.push_back(argv);
+			argv.clear();
+		}
+
 		pid_t pid;
 		int status;
 
@@ -65,9 +85,10 @@ int main() {
 			exit(1);
 		}
 		else if(pid == 0) {
-			int result = execvp(argv[0], &argv[0]);
-			cout << result << endl;
-			
+			for(unsigned i = 0; i < commands.size(); i++) {	
+				int result = execvp(commands.at(i).at(0), &(commands.at(i).at(0)));
+				cout << result << endl;
+			}	
 		}
 		else {
 			if(wait(&status) < 0) {
@@ -75,7 +96,7 @@ int main() {
 				exit(1);
 			}
 		}
-	
+		commands.clear();
 	}
 
 }
