@@ -23,4 +23,5 @@ sleep 1
 echo "echo \"echo hello; echo world && echo neat\""
 echo "echo hello; echo world && echo neat\""
 sleep 1
+echo "echo \"exit\""
 echo "exit") | ../bin/rshell

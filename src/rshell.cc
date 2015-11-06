@@ -7,10 +7,11 @@
 #include <cstring>
 #include "boost/tokenizer.hpp"
 #include "boost/algorithm/string.hpp"
+#include <errno.h>
 
 using namespace std;
 
-void execute(vector<char*> ok, int pass) {
+void execute(vector<char*> ok, int &pass) {
 	pid_t c_pid, pid;
 	int status;
 
@@ -21,13 +22,17 @@ void execute(vector<char*> ok, int pass) {
 		exit(1);
 	}
 	else if(c_pid == 0) {
+		// incase command is valid, but fails. pass = 1
 		pass = execvp(ok[0], &(ok[0]));
 		perror("execvp failed");
+		exit(errno);
 	}
-	else {
-		if((pid = wait(&status)) < 0) {
-			perror("Error in child");
-			exit(1);
+	else if (c_pid > 0) {
+		pid = wait(&status);
+		
+		if (WIFEXITED(status)) {
+			// pass = 2 if execvp fails for invalid command
+			pass = WEXITSTATUS(status);
 		}
 	}
 }
@@ -95,10 +100,10 @@ int main() {
 				}
 			}
 			//; condition
-			else if (*beg == ";" || strncmp(&beg->at(beg->size()-1), ";", 1) == 0) {
+			else if (*beg == ";" || strncmp(&beg->at(beg->size() - 1), ";", 1) == 0) {
 				connectors.push_back(";");
 				//cut off the ';' at the end, push into commands
-				string temp = beg->substr(0, beg->size()-1);
+				string temp = beg->substr(0, beg->size() - 1);
 				ls.push_back(temp);
 				argv.push_back(const_cast<char*>(ls.back().c_str()));
 				argv.push_back(NULL);
@@ -123,7 +128,7 @@ int main() {
 
 		//store the value returned by execvp
 		int state = 0;
-
+		
 		for (unsigned i = 0; i < commands.size(); i++) {
 			//exit check
 			if (string(commands[i][0]) == "exit") {
@@ -132,15 +137,15 @@ int main() {
 			//connectors only show up after one command has run
 			if (i > 0) {
 				// and condition, run command if previous succeeded
-				if ((connectors[i-1] == "AND") && (state != -1)) {
+				if ((connectors[i - 1] == "AND") && ((state < 1))) {
 					execute(commands[i], state);
 				}
 				// or condition, run command if previous failed
-				else if ((connectors[i-1] == "OR") && (state == -1)) {
+				else if ((connectors[i - 1] == "OR") && ((state >= 1))) {
 					execute(commands[i], state);
 				}
 				// ; condition, run command regardless
-				else if (connectors[i-1] == ";") {
+				else if (connectors[i - 1] == ";") {
 					execute(commands[i], state);
 				}
 				//else, failed all tests, skip the command
@@ -154,8 +159,8 @@ int main() {
 		}
 		//empty commands vector
 		commands.clear();
+		//empty connectors vector
+		connectors.clear();
 	}
 
 }
-
-

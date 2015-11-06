@@ -12,7 +12,11 @@ sleep 1
 echo "echo \"echo hello\""
 echo "echo hello"
 sleep 1
+echo "echo cd"
+echo "cd"
+sleep 1
 echo "echo \"mkdir -p test\""
 echo "mkdir -p test"
 sleep 1
+echo "echo \"exit\""
 echo "exit") | ../bin/rshell 
