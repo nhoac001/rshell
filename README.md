@@ -31,6 +31,7 @@ input.
 Connectors
 --------------------------
 This program also allows the use of connectors:
+
 	*  ;	allows for multiple commands in one line 
 			i.e. ls -a; echo hello 
 
