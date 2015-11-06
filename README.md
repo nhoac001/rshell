@@ -72,6 +72,10 @@ i.e. echo hello # world
 	echo hello # ls -a
 		will echo hello, but will not run ls -a
 
+Exit
+-------------------------
+Use "exit" to exit the program. It is case-sensitive.
+
 To Note
 -------------------------
 For logic connectors && and ||, if inputted consecutively
