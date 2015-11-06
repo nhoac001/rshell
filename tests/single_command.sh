@@ -19,4 +19,4 @@ echo "echo \"mkdir -p test\""
 echo "mkdir -p test"
 sleep 1
 echo "echo \"exit\""
-echo "exit") | ../bin/rshell 
+echo "exit") | ./bin/rshell 

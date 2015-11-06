@@ -9,4 +9,4 @@ echo "echo \"echo \"hello \# world\"; #ls -a"
 echo "echo \"hello \# world\"; #ls -a"
 sleep 1
 echo "echo \"exit\""
-echo "exit") | ../bin/rshell
+echo "exit") | ./bin/rshell
