@@ -60,6 +60,9 @@ int main() {
 	//2-d vector to store list of commands
 	vector< vector< char* > > commands;
 
+	//vector to store test flags
+	vector<string> testflags;
+
 	typedef boost::tokenizer<boost::escaped_list_separator<char> > tokenizer;
 	string separator1("");
 	string separator2(" ");
@@ -83,6 +86,13 @@ int main() {
 			//skip comments, only works if begins with '#'
 			if (*beg == "#" || strncmp(&beg->at(0), "#", 1) == 0) {
 				break;
+			}
+			//test condition
+			else if (*beg == "test") {
+				beg++;
+				if (strncmp(&beg->at(0), "-", 1) == 0) {
+					testflags.push_back(beg->substr(1, beg->size()));
+				}
 			}
 			//or condition
 			else if (*beg == "||" || strncmp(&beg->at(0), "||", 2) == 0) {
