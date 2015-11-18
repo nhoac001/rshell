@@ -8,6 +8,11 @@
 #include "boost/tokenizer.hpp"
 #include "boost/algorithm/string.hpp"
 #include <errno.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 
 using namespace std;
 
@@ -35,6 +40,12 @@ void execute(vector<char*> ok, int &pass) {
 			pass = WEXITSTATUS(status);
 		}
 	}
+}
+
+void test(vector<char*> ok, int &pass) {
+	struct stat buf;
+	stat(ok[0], &buf);
+	
 }
 
 int main() {
