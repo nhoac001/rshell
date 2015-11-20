@@ -121,10 +121,22 @@ int main() {
 				ls.push_back(*beg);
 				argv.push_back(const_cast<char*>(ls.back().c_str()));
   				beg++;
-					
+				
+				if (beg == tok.end()) {
+					break;
+				}
+
 				if (strncmp(&beg->at(0), "-", 1) == 0) {
-					test_flag = beg->substr(1, beg->size());
+					if (beg->size() > 1) {
+						test_flag = beg->substr(1, beg->size());
+					}
+					else {
+						test_flag = "x";
+					}
 					beg++;
+					if (beg == tok.end()) {
+						break;
+					}
 				}
 				if (strncmp(&beg->at(0), "/", 1) == 0) {
 					string tempo = beg->substr(1, beg->size());
@@ -138,7 +150,46 @@ int main() {
 				commands.push_back(argv);
 				argv.clear();
 			}
-			// flags
+			// [ ] test
+			else if (*beg == "[") {
+				ls.push_back("test");
+				argv.push_back(const_cast<char*>(ls.back().c_str()));
+				beg++;
+
+				if (beg == tok.end()) {
+					break;
+				}
+
+				if (strncmp(&beg->at(0), "-", 1) == 0) {
+					if (beg->size() > 1) {
+						test_flag = beg->substr(1, beg->size());
+					}
+					else {
+						test_flag = "x";
+					}
+					beg++;
+					if (beg == tok.end()) {
+						break;
+					}
+				}
+				while (*beg != "]") {
+					if (strncmp(&beg->at(0), "/", 1) == 0) {
+						string tempa = beg->substr(1, beg->size());
+						ls.push_back(tempa);
+					}
+					else {
+						ls.push_back(*beg);
+					}
+					argv.push_back(const_cast<char*>(ls.back().c_str()));
+					beg++;
+					if (beg == tok.end()) {
+						break;
+					}
+				}
+				argv.push_back(NULL);
+				commands.push_back(argv);
+				argv.clear();
+			}
 			//or condition
 			else if (*beg == "||" || strncmp(&beg->at(0), "||", 2) == 0) {
 				// check if argv has been filled. If not, skip the "||"
