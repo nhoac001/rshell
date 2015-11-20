@@ -87,6 +87,8 @@ int main() {
 	//2-d vector to store list of commands
 	vector< vector< char* > > commands;
 
+	//vector to hold flags
+	vector<string> test_flag;
 
 	typedef boost::tokenizer<boost::escaped_list_separator<char> > tokenizer;
 	string separator1("");
@@ -95,9 +97,9 @@ int main() {
 	boost::escaped_list_separator<char> sep(separator1, separator2, separator3);	
 
 	while(true) {
-		string test_flag;
+/*		string test_flag;
 		test_flag = "e";
-
+*/
 
 		cout << "$ ";
 		cout.flush();
@@ -128,15 +130,18 @@ int main() {
 
 				if (strncmp(&beg->at(0), "-", 1) == 0) {
 					if (beg->size() > 1) {
-						test_flag = beg->substr(1, beg->size());
+						test_flag.push_back(beg->substr(1, beg->size()));
 					}
 					else {
-						test_flag = "x";
+						test_flag.push_back("x");
 					}
 					beg++;
 					if (beg == tok.end()) {
 						break;
 					}
+				}
+				else {
+					test_flag.push_back("e");
 				}
 				if (strncmp(&beg->at(0), "/", 1) == 0) {
 					string tempo = beg->substr(1, beg->size());
@@ -162,15 +167,18 @@ int main() {
 
 				if (strncmp(&beg->at(0), "-", 1) == 0) {
 					if (beg->size() > 1) {
-						test_flag = beg->substr(1, beg->size());
+						test_flag.push_back(beg->substr(1, beg->size()));
 					}
 					else {
-						test_flag = "x";
+						test_flag.push_back("x");
 					}
 					beg++;
 					if (beg == tok.end()) {
 						break;
 					}
+				}
+				else {
+					test_flag.push_back("e");
 				}
 				while (*beg != "]") {
 					if (strncmp(&beg->at(0), "/", 1) == 0) {
@@ -249,9 +257,17 @@ int main() {
 			argv.clear();
 		}
 
+		for (unsigned i = 0; i < commands.size(); i++) {
+			for (unsigned j = 0; j < commands[i].size() - 1; j++) {
+				cout << commands[i][j];
+			}
+			cout << endl;
+		}
+
 		//store the value returned by execvp
 		int state = 1;
 		vector<string>::iterator conex = connectors.begin();
+		vector<string>::iterator flagit = test_flag.begin();
 		for (unsigned i = 0; i < commands.size(); i++) {
 			//exit check
 			if (string(commands[i][0]) == "exit") {
@@ -261,18 +277,39 @@ int main() {
 			if (i > 0) {
 				// and condition, run command if previous succeeded
 				if ((*conex == "AND") && ((state < 1))) {
-					execute(commands[i], state);
-					conex++;
+					if(string(commands[i][0]) == "test") {
+						commands[i].erase(commands[i].begin());
+						test(commands[i], state, *flagit);
+						flagit++;
+					}
+					else {
+						execute(commands[i], state);
+						conex++;
+					}
 				}
 				// or condition, run command if previous failed
 				else if ((*conex == "OR") && ((state >= 1))) {
-					execute(commands[i], state);
-					conex++;
+					if(string(commands[i][0]) == "test") {
+						commands[i].erase(commands[i].begin());
+						test(commands[i], state, *flagit);
+						flagit++;
+					}
+					else {
+						execute(commands[i], state);
+						conex++;
+					}
 				}
 				// ; condition, run command regardless
 				else if (*conex == ";") {
-					execute(commands[i], state);
-					conex++;
+					if(string(commands[i][0]) == "test") {
+						commands[i].erase(commands[i].begin());
+						test(commands[i], state, *flagit);
+						flagit++;
+					}
+					else {
+						execute(commands[i], state);
+						conex++;
+					}
 				}
 				//else, failed all tests, skip the command
 				else 
@@ -282,7 +319,8 @@ int main() {
 			else {
 				if(string(commands[i][0]) == "test") {
 					commands[i].erase(commands[i].begin());
-					test(commands[i], state, test_flag);
+					test(commands[i], state, *flagit);
+					flagit++;
 				}
 				else {
 					execute(commands[i], state);
@@ -293,6 +331,8 @@ int main() {
 		commands.clear();
 		//empty connectors vector
 		connectors.clear();
+		//empty flag vector
+		test_flag.clear();
 	}
 
 }
