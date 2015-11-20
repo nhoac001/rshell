@@ -257,12 +257,13 @@ int main() {
 			argv.clear();
 		}
 
-		for (unsigned i = 0; i < commands.size(); i++) {
-			for (unsigned j = 0; j < commands[i].size() - 1; j++) {
-				cout << commands[i][j];
-			}
-			cout << endl;
-		}
+/*		for (unsigned i = 0; i < commands.size(); i++) {
+*			for (unsigned j = 0; j < commands[i].size() - 1; j++) {
+*				cout << commands[i][j];
+*			}
+*			cout << endl;
+*		}
+*/
 
 		//store the value returned by execvp
 		int state = 1;
