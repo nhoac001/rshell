@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
 using namespace std;
 
 void execute(vector<char*> ok, int &pass) {
@@ -42,11 +41,39 @@ void execute(vector<char*> ok, int &pass) {
 	}
 }
 
-void test(vector<char*> ok, int &pass) {
+void test(vector<char*> ok, int &pass, string flag) {
 	struct stat buf;
 	stat(ok[0], &buf);
-	
-}
+	cout << "flag: " << flag << endl
+		<< "ISREG: " << S_ISREG(buf.st_mode) << endl
+		<< "ISDIR: " << S_ISDIR(buf.st_mode) << endl;
+	if (flag == "e") {
+		cout << "testing e: ";
+		if ((S_ISREG(buf.st_mode) == 1) || (S_ISDIR(buf.st_mode) == 1)) {
+			cout << "passed e" << endl;
+			pass = 0;
+		}
+		else {
+			cout << "failed e" << endl;
+		}
+	}
+	else if (flag == "d") {
+		if(S_ISDIR(buf.st_mode) == 1) {
+			cout << "passed d" << endl;
+			pass = 0;
+		}
+	}
+	else if (flag == "f") {
+		if(S_ISREG(buf.st_mode) == 1) {
+			cout << "passed f" << endl;
+			pass = 0;
+		}
+	}
+	else {
+		perror("unrecognized flag");
+	}
+}	
+		
 
 int main() {
 	//vector to temp hold commands
@@ -60,8 +87,6 @@ int main() {
 	//2-d vector to store list of commands
 	vector< vector< char* > > commands;
 
-	//vector to store test flags
-	vector<string> testflags;
 
 	typedef boost::tokenizer<boost::escaped_list_separator<char> > tokenizer;
 	string separator1("");
@@ -70,6 +95,10 @@ int main() {
 	boost::escaped_list_separator<char> sep(separator1, separator2, separator3);	
 
 	while(true) {
+		string test_flag;
+		test_flag = "e";
+
+
 		cout << "$ ";
 		cout.flush();
 
@@ -88,12 +117,28 @@ int main() {
 				break;
 			}
 			//test condition
-			else if (*beg == "test") {
-				beg++;
+			else if (*beg == "test" || strncmp(&beg->at(0), "test", 4) == 0) {
+				ls.push_back(*beg);
+				argv.push_back(const_cast<char*>(ls.back().c_str()));
+  				beg++;
+					
 				if (strncmp(&beg->at(0), "-", 1) == 0) {
-					testflags.push_back(beg->substr(1, beg->size()));
+					test_flag = beg->substr(1, beg->size());
+					beg++;
 				}
+				if (strncmp(&beg->at(0), "/", 1) == 0) {
+					string tempo = beg->substr(1, beg->size());
+					ls.push_back(tempo);
+				}
+				else {
+					ls.push_back(*beg);
+				}
+				argv.push_back(const_cast<char*>(ls.back().c_str()));
+				argv.push_back(NULL);
+				commands.push_back(argv);
+				argv.clear();
 			}
+			// flags
 			//or condition
 			else if (*beg == "||" || strncmp(&beg->at(0), "||", 2) == 0) {
 				// check if argv has been filled. If not, skip the "||"
@@ -105,12 +150,15 @@ int main() {
 					argv.push_back(NULL);
 					commands.push_back(argv);
 					argv.clear();
+				}
+				if (commands.size() != 0) {
+					connectors.push_back("OR");
 				}	
 			}
 			//and condition - same as OR above, just change "or" with "and"
 			else if (*beg == "&&" || strncmp(&beg->at(0), "&&", 2) == 0) {
 				//check if argv has been filled. If not, skip the "&&"
-				if (argv.size() != 0) {
+				if (argv.size() != 0)  {
 					//push back "AND" for you run commmands
 					connectors.push_back("AND");
 
@@ -118,6 +166,9 @@ int main() {
 					argv.push_back(NULL);
 					commands.push_back(argv);
 					argv.clear();
+				}
+				if (commands.size() != 0) {
+					connectors.push_back("AND");
 				}
 			}
 			//; condition
@@ -148,8 +199,8 @@ int main() {
 		}
 
 		//store the value returned by execvp
-		int state = 0;
-		
+		int state = 1;
+		vector<string>::iterator conex = connectors.begin();
 		for (unsigned i = 0; i < commands.size(); i++) {
 			//exit check
 			if (string(commands[i][0]) == "exit") {
@@ -158,16 +209,19 @@ int main() {
 			//connectors only show up after one command has run
 			if (i > 0) {
 				// and condition, run command if previous succeeded
-				if ((connectors[i - 1] == "AND") && ((state < 1))) {
+				if ((*conex == "AND") && ((state < 1))) {
 					execute(commands[i], state);
+					conex++;
 				}
 				// or condition, run command if previous failed
-				else if ((connectors[i - 1] == "OR") && ((state >= 1))) {
+				else if ((*conex == "OR") && ((state >= 1))) {
 					execute(commands[i], state);
+					conex++;
 				}
 				// ; condition, run command regardless
-				else if (connectors[i - 1] == ";") {
+				else if (*conex == ";") {
 					execute(commands[i], state);
+					conex++;
 				}
 				//else, failed all tests, skip the command
 				else 
@@ -175,7 +229,13 @@ int main() {
 			}
 			// i = 0. first command
 			else {
-				execute(commands[i], state);
+				if(string(commands[i][0]) == "test") {
+					commands[i].erase(commands[i].begin());
+					test(commands[i], state, test_flag);
+				}
+				else {
+					execute(commands[i], state);
+				}
 			}
 		}
 		//empty commands vector
