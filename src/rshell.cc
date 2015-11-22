@@ -82,12 +82,6 @@ int main() {
 	vector<string> test_flag;
 
 
-	//vector for separating grouped commands
-	vector< vector< vector< char* > > > groups;
-
-	//vector storing wether group passed
-	vector<int> group_state;
-
 	//bool open_paren = false;
 
 	typedef boost::tokenizer<boost::escaped_list_separator<char> > tokenizer;
