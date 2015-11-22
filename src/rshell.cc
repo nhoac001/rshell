@@ -44,28 +44,19 @@ void execute(vector<char*> ok, int &pass) {
 void test(vector<char*> ok, int &pass, string flag) {
 	struct stat buf;
 	stat(ok[0], &buf);
-	cout << "flag: " << flag << endl
-		<< "ISREG: " << S_ISREG(buf.st_mode) << endl
-		<< "ISDIR: " << S_ISDIR(buf.st_mode) << endl;
+
 	if (flag == "e") {
-		cout << "testing e: ";
 		if ((S_ISREG(buf.st_mode) == 1) || (S_ISDIR(buf.st_mode) == 1)) {
-			cout << "passed e" << endl;
 			pass = 0;
-		}
-		else {
-			cout << "failed e" << endl;
 		}
 	}
 	else if (flag == "d") {
 		if(S_ISDIR(buf.st_mode) == 1) {
-			cout << "passed d" << endl;
 			pass = 0;
 		}
 	}
 	else if (flag == "f") {
 		if(S_ISREG(buf.st_mode) == 1) {
-			cout << "passed f" << endl;
 			pass = 0;
 		}
 	}
@@ -89,6 +80,15 @@ int main() {
 
 	//vector to hold flags
 	vector<string> test_flag;
+
+
+	//vector for separating grouped commands
+	vector< vector< vector< char* > > > groups;
+
+	//vector storing wether group passed
+	vector<int> group_state;
+
+	//bool open_paren = false;
 
 	typedef boost::tokenizer<boost::escaped_list_separator<char> > tokenizer;
 	string separator1("");
@@ -281,11 +281,9 @@ int main() {
 					if(string(commands[i][0]) == "test") {
 						commands[i].erase(commands[i].begin());
 						test(commands[i], state, *flagit);
-						flagit++;
 					}
 					else {
 						execute(commands[i], state);
-						conex++;
 					}
 				}
 				// or condition, run command if previous failed
@@ -293,11 +291,9 @@ int main() {
 					if(string(commands[i][0]) == "test") {
 						commands[i].erase(commands[i].begin());
 						test(commands[i], state, *flagit);
-						flagit++;
 					}
 					else {
 						execute(commands[i], state);
-						conex++;
 					}
 				}
 				// ; condition, run command regardless
@@ -305,16 +301,20 @@ int main() {
 					if(string(commands[i][0]) == "test") {
 						commands[i].erase(commands[i].begin());
 						test(commands[i], state, *flagit);
-						flagit++;
 					}
 					else {
 						execute(commands[i], state);
-						conex++;
 					}
 				}
 				//else, failed all tests, skip the command
 				else 
 				{}
+				//since i > 0, there must be a connector, increment
+				conex++;
+				//if current command was a "test", increment flag iterator
+				if (strncmp(commands[i][0], "test", 4) == 0) {
+					flagit++;
+				}
 			}
 			// i = 0. first command
 			else {
