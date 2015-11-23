@@ -63,6 +63,35 @@ This program also allows the use of connectors:
 
 				 lol || echo hello
 				    will return error, then echo hello
+Test
+-------------------------
+Test is used to check existance of files and directories. Can also use [ ].
+format: "test -flag path" or "[ -flag path ]"
+flags: 
+
+	* -e	generic/default flag, checks if file/directory exists
+
+	* -f	checks if path is a file if it exists
+
+	* -d	check if path is a directory if it exists
+
+	* invalid flags will perror "unrecognized flag"
+
+examples using current directory:
+
+	* test /src/rshell.cc	returns true
+
+	* test -f /src		returns false
+
+	* [ -d src ]		returns true
+
+	* [ src ]		returns true
+
+notes:
+
+	* spacing matters for bracket format
+
+	* do not use "./" to denote current directory
 
 Comments
 -------------------------
