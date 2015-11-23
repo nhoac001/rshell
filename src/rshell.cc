@@ -16,7 +16,7 @@
 using namespace std;
 
 void execute(vector<char*> ok, int &pass) {
-	pid_t c_pid, pid;
+	pid_t c_pid;
 	int status;
 
 	c_pid = fork();
@@ -32,7 +32,7 @@ void execute(vector<char*> ok, int &pass) {
 		exit(errno);
 	}
 	else if (c_pid > 0) {
-		pid = wait(&status);
+		c_pid = wait(&status);
 		
 		if (WIFEXITED(status)) {
 			// pass = 2 if execvp fails for invalid command
